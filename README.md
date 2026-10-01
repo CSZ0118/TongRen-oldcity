@@ -10,19 +10,28 @@
 
 ## 快速开始
 
+### 最简单：双击 `启动预览.cmd`
+
+双击后自动起服务器并打开浏览器。**这个窗口就是服务器，关掉窗口 = 停止。**
+
+> **换到另一台 Windows 电脑**：把整个文件夹拷过去（U 盘 / 微信 / 网盘都行），
+> 双击 `启动预览.cmd` 即可。那台电脑需要有 [Node.js](https://nodejs.org/)；
+> 只有 Python 也能跑（但视频进度条拖不动）。两个都没有的话，脚本会给出替代办法。
+
+### 或者用命令行
+
 ```bash
-npm run dev          # → http://127.0.0.1:5173
+npm run dev                          # → http://127.0.0.1:5173
+node tools/serve.mjs --port 8080     # 换端口
+node tools/serve.mjs --host 0.0.0.0  # 给同局域网的同学看
 ```
 
-没有 npm 也行，任意静态服务器都可以；或者直接：
+### ⚠️ 不要双击 `index.html`
 
-```bash
-node tools/serve.mjs --port 8080
-```
-
-> ⚠️ **不要双击 `index.html` 打开。**
-> 项目用 ES Module，`file://` 协议下浏览器会拒绝加载模块，页面白屏。
-> 必须走 HTTP 服务器。
+那样只会停在"正在铺开长卷…"那一屏。原因：项目用 ES Module，
+`file://` 协议下 origin 是 `null`，浏览器按 CORS 规则拒绝加载 `js/main.js`
+（浏览器报错原文和完整解释见 [docs/WHY-NOT-FILE.md](docs/WHY-NOT-FILE.md)）。
+**必须走 HTTP 服务器** —— `启动预览.cmd` 干的就是这件事。
 
 ### 三个入口
 
@@ -77,6 +86,7 @@ npm run smoke           # 无头浏览器跑一遍真实交互（需要本机有
 ## 目录结构
 
 ```
+├── 启动预览.cmd              ★ 双击就能看（起服务器 + 开浏览器）
 ├── index.html                主页面
 ├── video-test.html           视频播放自检页
 ├── css/
@@ -109,6 +119,7 @@ npm run smoke           # 无头浏览器跑一遍真实交互（需要本机有
 ├── docs/
 │   ├── DAY1.md               Day1 交付说明与验收记录
 │   ├── ARCHITECTURE.md       架构与扩展点
+│   ├── WHY-NOT-FILE.md       ★ 为什么不能双击 index.html / 怎么在别的电脑上打开
 │   └── ASSETS.md             ★ 素材交付规范（计科B / 建筑同学必读）
 └── .github/workflows/deploy.yml   GitHub Pages 自动部署
 ```
@@ -143,6 +154,7 @@ npm run smoke           # 无头浏览器跑一遍真实交互（需要本机有
 | 文档 | 给谁看 |
 | --- | --- |
 | [`docs/DAY1.md`](docs/DAY1.md) | 所有人：Day1 做了什么、怎么验收、踩过哪些坑 |
+| [`docs/WHY-NOT-FILE.md`](docs/WHY-NOT-FILE.md) | 所有人：**打不开 / 换电脑怎么打开**，看这一份 |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 要改代码的人：模块职责、数据流、改哪里 |
 | [`docs/ASSETS.md`](docs/ASSETS.md) | 计科B / 建筑同学：素材命名、格式、导出设置 |
 

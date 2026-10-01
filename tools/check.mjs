@@ -49,9 +49,12 @@ async function readText(p) {
   }
 }
 
+/** 这些目录不用扫：依赖、缓存、临时产物（_tmp 里会有我调试时随手写的脚本） */
+const SKIP_DIRS = new Set(['node_modules', '.npm-cache', '.git', '_tmp', '_dist', '.smoke-profile']);
+
 async function walk(dir, exts, out = []) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
-    if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+    if (entry.name.startsWith('.') || SKIP_DIRS.has(entry.name)) continue;
     const p = join(dir, entry.name);
     if (entry.isDirectory()) await walk(p, exts, out);
     else if (exts.some((e) => entry.name.endsWith(e))) out.push(p);
@@ -286,6 +289,7 @@ async function checkLayout() {
     'video-test.html',
     'README.md',
     'package.json',
+    '启动预览.cmd',
     'js/config.js',
     'css/base.css',
     'css/shell.css',
@@ -293,6 +297,9 @@ async function checkLayout() {
     'vendor/three/addons/loaders/GLTFLoader.js',
     '.github/workflows/deploy.yml',
     'docs/DAY1.md',
+    'docs/WHY-NOT-FILE.md',
+    'docs/ARCHITECTURE.md',
+    'docs/ASSETS.md',
   ];
   for (const f of required) {
     if (!existsSync(join(ROOT, f))) fail(`缺少约定文件：${f}`);
@@ -308,6 +315,49 @@ async function checkLayout() {
   notes.push('目录约定检查完成');
 }
 
+/**
+ * ⑦ 批处理文件的编码守则。
+ *
+ * 这两条都真踩过，而且报错信息完全指不到病根（屏幕上只会刷一片
+ * "'xxx' 不是内部或外部命令"）：
+ *   1. 不能有非 ASCII 字符 —— cmd.exe 解析批处理文件用的是系统 ANSI 代码页
+ *      （中文 Windows 是 GBK），UTF-8 的中文会被拆成乱码，剩下的字节还会被
+ *      当成命令执行。加 chcp 65001 也救不了（实测过）。
+ *   2. 必须是 CRLF 行尾 —— LF-only 时 goto :label 会失灵。
+ */
+async function checkBatchFiles() {
+  const files = (await walk(ROOT, ['.cmd', '.bat'])).filter((p) => !p.includes('node_modules'));
+  if (!files.length) return;
+
+  for (const file of files) {
+    const buf = await readFile(file);
+
+    let firstBad = -1;
+    let badCount = 0;
+    for (let i = 0; i < buf.length; i += 1) {
+      if (buf[i] > 127) {
+        if (firstBad < 0) firstBad = i;
+        badCount += 1;
+      }
+    }
+    if (badCount > 0) {
+      fail(
+        `${rel(file)} 含 ${badCount} 个非 ASCII 字节（首个在偏移 ${firstBad}）：` +
+          `cmd.exe 会按 GBK 解析，导致乱码甚至把字节当命令执行。请改成纯 ASCII，` +
+          `中文提示交给 node/python 输出`,
+      );
+    }
+
+    const text = buf.toString('latin1');
+    const bareLf = (text.match(/(?<!\r)\n/g) ?? []).length;
+    if (bareLf > 0) {
+      fail(`${rel(file)} 有 ${bareLf} 处裸 LF 行尾：批处理文件必须用 CRLF，否则 goto :label 会失灵`);
+    }
+  }
+
+  notes.push(`批处理文件编码守则：${files.map((f) => rel(f)).join('、')} 均为纯 ASCII + CRLF`);
+}
+
 // ────────────────────────────────────────────────────────────
 // main
 // ────────────────────────────────────────────────────────────
@@ -320,6 +370,7 @@ await checkModuleGraph();
 await checkSelectors();
 await checkActions();
 await checkAssetPaths();
+await checkBatchFiles();
 
 console.log(C.bold('检查结果\n'));
 for (const n of notes) console.log(`  ${C.dim('·')} ${n}`);

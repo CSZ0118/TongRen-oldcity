@@ -71,13 +71,21 @@ Day1 只做前两步 + 把「视频能不能播」这件事提前验证掉。
 
 ## 三、怎么跑起来
 
+### 最省事：双击 `启动预览.cmd`
+
+双击后自动起服务器 + 打开浏览器。窗口就是服务器，关掉窗口 = 停止。
+**拷到另一台 Windows 电脑上也是双击这一个文件**（那台电脑要有 Node.js）。
+
+### 或者命令行
+
 ```bash
 npm run dev          # → http://127.0.0.1:5173
 ```
 
 > ⚠️ **不要直接双击 `index.html`**。
-> 项目用的是 ES Module，`file://` 协议下浏览器会拒绝加载模块，页面白屏；
-> 视频拖动进度条依赖 HTTP Range 请求，`file://` 也不支持。必须走本地服务器。
+> 浏览器会报 `Access to script at 'file:///.../js/main.js' from origin 'null'
+> has been blocked by CORS policy`，页面永远停在"正在铺开长卷…"。
+> 原因和五种替代打开方式见 **[docs/WHY-NOT-FILE.md](WHY-NOT-FILE.md)**。
 
 三个入口：
 
@@ -240,3 +248,14 @@ npm run dev
 5. **`muted` 和用户手势的时序**：`play()` 必须在 click 处理函数的**同步调用栈**里调用。
    哪怕中间只插一个 `await`，用户手势就失效了，带声音的播放会被拒。
    所以 `main.js` 里是先 `video.show()` 再 `await` 任何东西。
+6. **批处理文件（.cmd）里千万别写中文**：cmd.exe 解析批处理文件用的是系统 ANSI 代码页
+   （中文 Windows 是 GBK），UTF-8 的中文会被拆成一堆乱码，剩下的字节还会**被当成命令执行**，
+   屏幕上刷一片 `'xxx' 不是内部或外部命令`。
+   加 `chcp 65001` 也救不了（实测过）。
+   所以 `启动预览.cmd` 刻意是**纯 ASCII**，中文提示交给 `node tools/serve.mjs` 输出
+   —— Node 在 Windows 上走 Unicode 控制台 API，中文正常。
+   `tools/check.mjs` 里有一条检查专门盯着这件事。
+7. **`.cmd` 必须用 CRLF 行尾**：LF-only 的批处理文件里 `goto :label` 会失灵。
+   写脚本生成 `.cmd` 时注意转换。
+8. **别用 `file://` 打开**：ES Module 在 `file://` 下会被 CORS 拦掉
+   （origin 是 `null`，允许的协议名单里没有 `file`）。见 [WHY-NOT-FILE.md](WHY-NOT-FILE.md)。
