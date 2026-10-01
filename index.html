@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#17262a" />
+<title>贵州人间长卷 · 点亮天宫</title>
+<meta name="description" content="一幅贵州人间长卷，画里藏着六个彩蛋。点中它们，天宫就从壁画里长出来。" />
+
+<link rel="stylesheet" href="./css/base.css" />
+<link rel="stylesheet" href="./css/shell.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⛩️</text></svg>" />
+
+<!--
+  零构建：three.js 直接由仓库里的 vendor/three 提供，不依赖任何 CDN。
+  注意：importmap 必须在任何 module 脚本之前。
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/addons/"
+  }
+}
+</script>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- ══════════ 长卷（横向滚动的主体） ══════════ -->
+  <div id="scroll" class="scroll" role="region" aria-label="贵州人间长卷，可左右拖动">
+    <div class="scroll__track" data-track>
+      <canvas class="scroll__art" data-art aria-hidden="true"></canvas>
+      <div class="eggs" data-eggs></div>
+    </div>
+  </div>
+
+  <!-- ══════════ Three.js 建筑层（透明覆盖在长卷之上） ══════════ -->
+  <canvas id="stage3d" class="stage3d" aria-hidden="true"></canvas>
+
+  <!-- ══════════ 视频 / 弹层容器 ══════════ -->
+  <div id="layers" class="layers"></div>
+
+  <!-- ══════════ 顶部 HUD ══════════ -->
+  <header class="hud hud--top">
+    <div class="hud__brand">
+      <h1 class="hud__title" data-copy-title>贵州人间长卷</h1>
+      <p class="hud__subtitle" data-copy-subtitle>点中画里的彩蛋，天宫就从壁画里长出来</p>
+    </div>
+
+    <div class="hud__actions">
+      <span class="stage-note" data-stage-note title="">3D 舞台初始化中…</span>
+      <button type="button" class="btn" data-act="sound" data-on="true" title="音效开关">音效 开</button>
+      <button type="button" class="btn" data-act="next" title="跳到还没点亮的彩蛋">下一处彩蛋</button>
+      <button type="button" class="btn" data-act="debug" title="调试面板（快捷键 D）">调试</button>
+      <button type="button" class="btn btn--ghost" data-act="reset" data-copy-reset>重看一遍</button>
+    </div>
+  </header>
+
+  <!-- ══════════ 底部进度 ══════════ -->
+  <footer class="hud hud--bottom">
+    <div class="progress">
+      <span class="progress__text" data-progress-text>已点亮 0 / 6 座天宫</span>
+      <div class="progress__ticks" data-progress-ticks aria-hidden="true"></div>
+    </div>
+    <div class="progress__track" aria-hidden="true">
+      <div class="progress__fill" data-progress-fill></div>
+    </div>
+    <p class="hud__keys">
+      <kbd>拖动</kbd> / <kbd>滚轮</kbd> / <kbd>←</kbd><kbd>→</kbd> 移动长卷　·　<kbd>D</kbd> 调试面板　·　<kbd>Esc</kbd> 跳过视频
+    </p>
+  </footer>
+
+  <!-- ══════════ 彩蛋信息卡 ══════════ -->
+  <aside id="card" class="card" hidden aria-live="polite">
+    <button type="button" class="card__x" data-act="card-close" aria-label="收起">✕</button>
+    <div data-card-body></div>
+  </aside>
+
+  <!-- ══════════ 开场提示 ══════════ -->
+  <div id="hint" class="hint" hidden>
+    <span class="hint__arrow">←</span>
+    <span>左右拖动长卷，画里藏着 <strong>六个</strong> 彩蛋</span>
+    <span class="hint__arrow">→</span>
+  </div>
+
+  <!-- ══════════ 结局 ══════════ -->
+  <div id="finale" class="finale" hidden>
+    <div class="finale__inner">
+      <p class="finale__kicker">六座天宫齐亮 · 云海洞开</p>
+      <h2 class="finale__title">天 宫 现</h2>
+      <p class="finale__line" data-finale-line>人间烟火，天上宫阙，都在这一卷里。</p>
+      <div class="finale__actions">
+        <button type="button" class="btn btn--primary" data-act="finale-close">继续看画卷</button>
+        <button type="button" class="btn" data-act="finale-reset">从头再来</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 调试面板 ══════════ -->
+  <aside id="debug" class="dbg" hidden></aside>
+
+  <!-- ══════════ 轻提示 ══════════ -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- ══════════ 开场加载 ══════════ -->
+  <div id="boot" class="boot">
+    <div class="boot__inner">
+      <h1 class="boot__title">贵州人间长卷</h1>
+      <p class="boot__sub">点亮天宫 · Day1 网页壳壳</p>
+      <div class="boot__track"><div class="boot__bar" data-boot-bar></div></div>
+      <p class="boot__text" data-boot-text>正在铺开长卷…</p>
+      <noscript><p class="boot__text" data-tone="bad">这个作品需要开启 JavaScript 才能运行。</p></noscript>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

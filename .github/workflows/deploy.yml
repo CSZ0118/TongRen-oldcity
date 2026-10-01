@@ -1,0 +1,47 @@
+name: Deploy to GitHub Pages
+
+# 零构建静态站点：直接把仓库根目录发到 GitHub Pages。
+# 推送 main 分支后自动部署 → https://csz0118.github.io/TongRen-oldcity/
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上传站点文件
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+          # 仓库里没有构建产物，node_modules 已被 .gitignore 排除，
+          # vendor/ 是内置依赖，必须一起发上去。
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

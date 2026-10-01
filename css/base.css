@@ -1,0 +1,201 @@
+/* ============================================================
+   base.css —— 变量、重置、字体、通用控件
+   贵州人间长卷 · 视觉基调：绢本淡彩 + 天宫金
+   ============================================================ */
+
+:root {
+  /* 墨 / 纸 */
+  --ink: #17262a;
+  --ink-2: #24393d;
+  --ink-3: #3c5a55;
+  --paper: #f3ecdd;
+  --paper-2: #e4dac2;
+
+  /* 天宫金 / 青玉 */
+  --gold: #d8ab55;
+  --gold-2: #f2d38c;
+  --jade: #7fd1c1;
+  --seal: #b3402f;
+
+  /* 玻璃拟态面板 */
+  --glass: rgba(16, 30, 33, 0.72);
+  --glass-2: rgba(16, 30, 33, 0.86);
+  --glass-line: rgba(242, 211, 140, 0.22);
+  --glass-line-2: rgba(242, 211, 140, 0.4);
+
+  --text: #f4efe3;
+  --text-dim: rgba(244, 239, 227, 0.66);
+  --text-dim-2: rgba(244, 239, 227, 0.42);
+
+  --ok: #8fd9a8;
+  --warn: #e8c07a;
+  --bad: #e88a7d;
+
+  --shadow-1: 0 6px 24px rgba(0, 0, 0, 0.32);
+  --shadow-2: 0 18px 60px rgba(0, 0, 0, 0.45);
+
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+
+  --hud-pad: clamp(12px, 2.2vw, 28px);
+  --font-cn: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC",
+    "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-kai: "STKaiti", "KaiTi", "Kaiti SC", "Songti SC", "SimSun", serif;
+  --font-mono: ui-monospace, "SF Mono", Consolas, "Cascadia Mono", "Noto Sans Mono", monospace;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: #0e1a1d;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-cn);
+  color: var(--text);
+  background: #0e1a1d;
+  overflow: hidden;
+  overscroll-behavior: none;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+img,
+canvas,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  padding: 0.1em 0.42em;
+  margin: 0 0.12em;
+  border-radius: 5px;
+  border: 1px solid rgba(244, 239, 227, 0.24);
+  border-bottom-width: 2px;
+  background: rgba(244, 239, 227, 0.08);
+  color: var(--text-dim);
+}
+
+/* ── 通用按钮 ───────────────────────────────────────────── */
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--glass-line);
+  background: var(--glass);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  color: var(--text);
+  padding: 0.44em 0.95em;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s, color 0.18s;
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.btn:hover {
+  background: rgba(30, 52, 56, 0.86);
+  border-color: var(--glass-line-2);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--jade);
+  outline-offset: 2px;
+}
+
+.btn[data-on="false"] {
+  color: var(--text-dim-2);
+  text-decoration: line-through;
+}
+
+.btn--primary {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  border-color: rgba(255, 240, 200, 0.6);
+  color: #24180a;
+  font-weight: 600;
+}
+
+.btn--primary:hover {
+  background: linear-gradient(180deg, #ffe6ad, #e2b862);
+  color: #24180a;
+}
+
+.btn--ghost {
+  background: transparent;
+}
+
+/* ── 状态色 ─────────────────────────────────────────────── */
+
+[data-tone="ok"] {
+  color: var(--ok);
+}
+[data-tone="warn"] {
+  color: var(--warn);
+}
+[data-tone="bad"] {
+  color: var(--bad);
+}
+
+/* ── 无障碍：只给读屏看 ─────────────────────────────────── */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── 减少动效偏好 ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

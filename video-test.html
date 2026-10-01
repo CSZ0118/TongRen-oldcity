@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#17262a" />
+<title>视频播放测试 · 贵州人间长卷 Day1</title>
+<meta name="description" content="Day1 验收页：验证网页能不能播视频、素材到没到位、编码支不支持。" />
+
+<link rel="stylesheet" href="./css/base.css" />
+<link rel="stylesheet" href="./css/video-test.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🎬</text></svg>" />
+</head>
+
+<body class="report">
+<div class="wrap">
+
+  <header class="head">
+    <div>
+      <h1>视频播放测试</h1>
+      <p class="head__sub">贵州人间长卷 · <span data-build>Day1</span> 验收件 —— 网页壳壳能不能把视频播出来</p>
+    </div>
+    <nav class="head__nav">
+      <a class="btn" href="./index.html">← 回到长卷</a>
+      <button type="button" class="btn" data-act="rerun">全部重测</button>
+      <button type="button" class="btn btn--ghost" data-act="export">导出报告 JSON</button>
+    </nav>
+  </header>
+
+  <!-- 结论 -->
+  <section class="card-x verdict" data-verdict>
+    <div class="verdict__badge" data-verdict-badge>检测中…</div>
+    <div class="verdict__body">
+      <h2 data-verdict-title>正在跑自检…</h2>
+      <ul class="verdict__list" data-verdict-list></ul>
+    </div>
+  </section>
+
+  <!-- 播放器 -->
+  <section class="card-x">
+    <h2 class="card-x__title">1 · 播放器</h2>
+    <p class="card-x__hint">下面这个 &lt;video&gt; 就是主页面彩蛋用的同一个播放路径：改 src → load() → play()。</p>
+    <video data-player class="player" playsinline webkit-playsinline controls muted></video>
+    <div class="row">
+      <label class="field">
+        <span>播放源</span>
+        <select data-src-select></select>
+      </label>
+      <button type="button" class="btn btn--primary" data-act="play-selected">播放选中的源</button>
+      <button type="button" class="btn" data-act="play-suite">逐个播放测试（推荐）</button>
+      <label class="check">
+        <input type="checkbox" data-muted checked />
+        <span>静音播放（绕开浏览器自动播放限制）</span>
+      </label>
+    </div>
+    <pre class="out" data-play-out>等待测试…</pre>
+  </section>
+
+  <!-- 素材 -->
+  <section class="card-x">
+    <h2 class="card-x__title">2 · 素材到位情况</h2>
+    <p class="card-x__hint">
+      6 段彩蛋视频由计科B 在 Day2 交付，命名见 <code>docs/ASSETS.md</code>。
+      缺失的会标「缺」，主页面会自动走兜底视频与占位建筑，不会白屏。
+    </p>
+    <div data-assets class="assets">自检中…</div>
+  </section>
+
+  <!-- 浏览器能力 -->
+  <section class="card-x">
+    <h2 class="card-x__title">3 · 浏览器编解码能力</h2>
+    <p class="card-x__hint">结论直接决定剪映导出该选什么格式：<strong>MP4 / H.264</strong> 是唯一全平台都稳的选择。</p>
+    <div data-caps></div>
+  </section>
+
+  <!-- 自动播放策略 -->
+  <section class="card-x">
+    <h2 class="card-x__title">4 · 自动播放策略</h2>
+    <p class="card-x__hint">这一项决定彩蛋点击后视频能不能"自己播出来"，是这套交互最容易翻车的地方。</p>
+    <div data-autoplay>检测中…</div>
+    <div class="row">
+      <button type="button" class="btn" data-act="autoplay-retest">在用户手势下再测一次</button>
+    </div>
+  </section>
+
+  <!-- 合成测试 -->
+  <section class="card-x">
+    <h2 class="card-x__title">5 · 合成视频回放（不依赖任何素材）</h2>
+    <p class="card-x__hint">
+      用 canvas + MediaRecorder 现场录一段，再播回来。仓库里一个视频都没有时，
+      也能证明「编码 → 解码 → 播放」这条链路是通的。
+    </p>
+    <div class="row">
+      <button type="button" class="btn" data-act="synth">合成 3 秒测试片并回放</button>
+    </div>
+    <pre class="out" data-synth-out>未执行</pre>
+  </section>
+
+  <!-- 本地文件 -->
+  <section class="card-x">
+    <h2 class="card-x__title">6 · 本机文件试播</h2>
+    <p class="card-x__hint">把剪映导出的成片或任意视频拖进来，当场验证能不能播。</p>
+    <div class="drop" data-drop>
+      <input type="file" accept="video/*,audio/*" data-file hidden />
+      <p>把视频文件拖到这里，或 <button type="button" class="link" data-act="pick">选择文件</button></p>
+      <p class="drop__name" data-drop-name></p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>这个页面只用浏览器内置能力，没有任何第三方依赖。源文件：<code>video-test.html</code> + <code>js/videotest.js</code>。</p>
+  </footer>
+
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/addons/"
+  }
+}
+</script>
+<script type="module" src="./js/videotest.js"></script>
+</body>
+</html>

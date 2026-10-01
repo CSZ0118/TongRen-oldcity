@@ -1,0 +1,16 @@
+{
+  "name": "tongren-oldcity",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "贵州人间长卷 · 点亮天宫 —— 网页互动作品",
+  "scripts": {
+    "dev": "node tools/serve.mjs",
+    "start": "node tools/serve.mjs",
+    "vendor:three": "node tools/vendor-three.mjs",
+    "smoke": "node tools/smoke.mjs"
+  },
+  "devDependencies": {
+    "three": "0.169.0"
+  }
+}
