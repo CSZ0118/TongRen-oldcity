@@ -26,6 +26,10 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          # 仓库还没在 Settings → Pages 里启用 Pages 时，自动帮忙启用，
+          # 免得第一次部署因为 "Get Pages site failed" 直接失败。
+          enablement: true
 
       - name: 上传站点文件
         uses: actions/upload-pages-artifact@v3
