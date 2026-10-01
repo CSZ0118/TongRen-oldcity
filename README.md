@@ -150,8 +150,18 @@ npm run smoke           # 无头浏览器跑一遍真实交互（需要本机有
 
 ## 部署
 
-推送 `main` 分支即自动部署到 GitHub Pages：
+推送 `main` 分支后，GitHub Actions 会自动部署到：
 
 **https://csz0118.github.io/TongRen-oldcity/**
 
-首次部署需要在仓库 `Settings → Pages → Source` 里选 **GitHub Actions**。
+### 一次性设置（只做一次）
+
+打开 **https://github.com/CSZ0118/TongRen-oldcity/settings/pages**，
+把 `Build and deployment → Source` 选成 **「GitHub Actions」**，然后到
+[Actions 页面](https://github.com/CSZ0118/TongRen-oldcity/actions) 点 **Re-run all jobs**。
+
+> 为什么必须人工点这一步：`GITHUB_TOKEN` 没有创建 Pages 站点的权限，
+> `actions/configure-pages` 的 `enablement: true` 也只能配置已存在的站点，不能创建。
+> 所以第一次跑会失败 —— 工作流会直接在日志里把上面这段提示打出来，照着做即可。
+
+设置完之后，以后每次 `git push` 都会自动重新部署。

@@ -2,6 +2,13 @@ name: Deploy to GitHub Pages
 
 # 零构建静态站点：直接把仓库根目录发到 GitHub Pages。
 # 推送 main 分支后自动部署 → https://csz0118.github.io/TongRen-oldcity/
+#
+# ⚠️ 一次性设置（只需要做一次，之后不用管）：
+#   仓库 → Settings → Pages → Build and deployment → Source 选「GitHub Actions」
+#
+#   为什么必须人工做这一步：GITHUB_TOKEN 没有创建 Pages 站点的权限，
+#   configure-pages 的 enablement 也绕不过去（它只能配置已存在的站点，不能创建）。
+#   所以第一次会失败一次，启用完再 Re-run 就好了。
 
 on:
   push:
@@ -25,11 +32,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Pages
+        id: pages
+        # 不在这里直接失败：失败时下一句会给出一句人话提示
+        continue-on-error: true
         uses: actions/configure-pages@v5
         with:
-          # 仓库还没在 Settings → Pages 里启用 Pages 时，自动帮忙启用，
-          # 免得第一次部署因为 "Get Pages site failed" 直接失败。
+          # 万一将来 GITHUB_TOKEN 有权启用了，这里能自动开，省一次手工点击
           enablement: true
+
+      - name: Pages 没启用就给出提示
+        if: steps.pages.outcome == 'failure'
+        run: |
+          echo "::error title=GitHub Pages 还没启用::请打开 https://github.com/${{ github.repository }}/settings/pages 把 Source 选成「GitHub Actions」，然后点本页面右上角的 Re-run all jobs。"
+          echo ""
+          echo "原因：GITHUB_TOKEN 没有权限创建 Pages 站点，这一步只能人工做一次。"
+          echo "启用位置：https://github.com/${{ github.repository }}/settings/pages"
+          exit 1
 
       - name: 上传站点文件
         uses: actions/upload-pages-artifact@v3

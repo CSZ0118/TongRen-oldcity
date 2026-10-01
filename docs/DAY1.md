@@ -193,6 +193,7 @@ npm run smoke           # 无头浏览器跑真实交互（需要本机有 Edge/
 | 素材 404 是预期内的 | 自检会对 18 个还不存在的素材发 HEAD 请求，浏览器控制台会有一片红色 404。**这是正常的**，不是 bug |
 | 无头测试需要放宽沙箱 | `tools/smoke.mjs` 要启动 Chromium，Chromium 的多进程 IPC 需要命名管道，在受限沙箱里跑不了。受限环境下用 `tools/check.mjs`（静态检查）代替 |
 | 移动端只做了基础适配 | 触摸拖拽/布局都处理了，但没在真机上验证过 |
+| **首次部署要人工点一次** | `GITHUB_TOKEN` 没权限创建 Pages 站点，得先去 `Settings → Pages` 把 Source 选成「GitHub Actions」。工作流会在日志里直接给出这一步的提示。之后就不用了 |
 
 ---
 
