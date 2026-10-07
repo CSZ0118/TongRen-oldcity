@@ -568,120 +568,6 @@ body.is-complete .progress__fill {
   background: linear-gradient(90deg, var(--gold-2), #fff2cd, var(--gold-2));
 }
 
-/* ── 视频层 ─────────────────────────────────────────────── */
-
-.vlayer {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  pointer-events: auto;
-  background: rgba(5, 12, 14, 0.84);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  animation: vlayer-in 0.32s ease both;
-}
-
-@keyframes vlayer-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.vlayer__video {
-  max-width: min(93vw, 1360px);
-  max-height: 74vh;
-  width: auto;
-  border-radius: var(--r-md);
-  background: #000;
-  box-shadow: var(--shadow-2), 0 0 0 1px rgba(242, 211, 140, 0.18);
-}
-
-.vlayer__scrim {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.vlayer__bar {
-  position: absolute;
-  left: 50%;
-  bottom: clamp(14px, 4vh, 44px);
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: var(--glass-2);
-  border: 1px solid var(--glass-line);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  max-width: min(92vw, 900px);
-  box-shadow: var(--shadow-1);
-}
-
-.vlayer__label {
-  font-size: 0.84rem;
-  color: var(--text);
-  font-family: var(--font-kai);
-  letter-spacing: 0.04em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.vlayer__badge {
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-  white-space: nowrap;
-}
-
-.vlayer__spacer {
-  width: 8px;
-}
-
-.vbtn {
-  appearance: none;
-  border: 1px solid var(--glass-line);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.16s, border-color 0.16s;
-}
-
-.vbtn:hover {
-  background: rgba(255, 255, 255, 0.13);
-  border-color: var(--glass-line-2);
-}
-
-.vbtn[data-on="true"] {
-  border-color: rgba(143, 217, 168, 0.5);
-}
-
-.vbtn--ghost {
-  background: transparent;
-  color: var(--text-dim);
-}
-
-.vbtn--ghost:hover {
-  color: var(--text);
-}
-
 /* ── 轻提示 ─────────────────────────────────────────────── */
 
 .toast {
@@ -997,15 +883,6 @@ body.is-complete .progress__fill {
     left: var(--hud-pad);
     right: var(--hud-pad);
     width: auto;
-  }
-
-  .vlayer__video {
-    max-height: 60vh;
-  }
-
-  .vlayer__bar {
-    flex-wrap: wrap;
-    justify-content: center;
   }
 
   .egg {

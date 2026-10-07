@@ -1,5 +1,5 @@
 /**
- * Stage2D —— 纯 2D 特效舞台（替代 stage3d.js）
+ * Stage2D —— 纯 2D 特效舞台
  *
  * 建筑不再用 Three.js，而是 SVG 线稿 + CSS 伪 3D + Canvas 粒子：
  *  1. SVG 描边（stroke-dashoffset）—— 建筑从壁画里"画出来"
@@ -10,7 +10,7 @@
  * 关键取舍：建筑直接放进 .scroll__track 里（和彩蛋同一套 --x/--y 百分比定位），
  * 随长卷一起滚动，不需要每帧换算屏幕坐标。粒子画布是独立的全屏层。
  *
- * 对外接口尽量对齐 Stage3D，让 main.js 里的调用保持直觉：
+ * 对外接口保持简洁，让 main.js 里的调用保持直觉：
  *   init / resize / grow / rebuildFound / setFinale / reset / buildings / ready / info
  */
 
