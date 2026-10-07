@@ -1,0 +1,103 @@
+/* stage2d.css —— 纯 2D 建筑层 + 粒子画布 */
+
+/* 建筑层：长卷 track 内的一个满铺容器，负责伪 3D 透视 */
+.buildings {
+  position: absolute;
+  inset: 0;
+  perspective: 900px;   /* 关键：让 rotateX 有"立起来"的透视纵深感 */
+  pointer-events: none;
+  z-index: 4;           /* 盖在壁画/彩蛋之上，HUD(30) 之下 */
+}
+
+/* 全屏粒子画布（固定层，不随长卷滚动） */
+#stage2d {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* 单座建筑：底部锚在彩蛋 (--x, --y)，初始"躺平"在壁画里 */
+.building {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  height: var(--h);
+  aspect-ratio: 1.1;
+  transform: translate(-50%, -100%) rotateX(84deg) scale(0.55);
+  transform-origin: 50% 100%;
+  opacity: 0.18;
+  pointer-events: none;
+  transition:
+    transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.9s ease;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 0 6px hsl(var(--hue) 85% 60% / 0.5));
+}
+
+.building.show {
+  transform: translate(-50%, -100%) rotateX(0deg) scale(1);
+  opacity: 1;
+}
+
+.building svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.building .draw {
+  fill: none;
+  stroke: hsl(var(--hue) 70% 78%);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px hsl(var(--hue) 90% 62% / 0.8));
+}
+
+/* 呼吸光晕 */
+.building__glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160%;
+  height: 160%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, hsl(var(--hue) 90% 62% / 0.45), transparent 62%);
+  opacity: 0;
+  pointer-events: none;
+}
+.building.show .building__glow {
+  opacity: 1;
+  animation: b2d-breathe 3s ease-in-out infinite;
+}
+@keyframes b2d-breathe {
+  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.75; transform: translate(-50%, -50%) scale(1.12); }
+}
+
+/* 地面阴影：躺着时铺开，立起来时收成一小条 */
+.building__shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -6%;
+  width: 130%;
+  height: 18%;
+  transform: translateX(-50%) scaleX(1);
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5), transparent 70%);
+  transition: transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.building.show .building__shadow {
+  transform: translateX(-50%) scaleX(0.45);
+}
+
+/* 结局：全部点亮后整体更亮 */
+.buildings.is-finale .building {
+  filter: drop-shadow(0 0 12px hsl(var(--hue) 90% 65% / 0.85));
+}
+.buildings.is-finale .building .draw {
+  stroke: hsl(var(--hue) 65% 86%);
+}

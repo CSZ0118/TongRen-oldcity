@@ -1,15 +1,14 @@
 /**
  * 素材自检（preflight）。
  *
- * Day1 的现实情况：壁画、6 段视频、6 个 GLB、音效都还没做出来。
- * 如果前端傻等素材，Day1 就没法验收。
- * 所以这里在开场时把所有该有的素材统一探一遍，把「有 / 没有」记成一张清单，
+ * 现状：壁画、6 个音效都还没做出来。如果前端傻等素材，就没法验收。
+ * 所以这里在开场时把所有该有的音效统一探一遍，把「有 / 没有」记成一张清单，
  * 后面彩蛋点击时就能：
- *   - 有素材 → 用真素材
- *   - 没素材 → 走占位/兜底，并在页面上明确标注「【占位】」
- * 这样 Day2 素材一放进来，代码一行都不用改，自动切到真素材。
+ *   - 有音效 → 放真文件
+ *   - 没音效 → 用 WebAudio 合成一声钟磬兜底
+ * 这样音效一放进 assets/audio/，代码一行都不用改，自动切到真素材。
  */
-import { EGGS, FALLBACK_VIDEO } from './config.js';
+import { EGGS } from './config.js';
 
 /** @typedef {{url:string, exists:boolean, status:number, size:number, type:string, error?:string}} Probe */
 
@@ -78,13 +77,11 @@ export function probe(url) {
 }
 
 /**
- * 开场统一自检。
+ * 开场统一自检（现在只剩音效）。
  * @param {{onProgress?:(done:number,total:number)=>void}} [opts]
  */
 export async function preflight({ onProgress } = {}) {
-  /** @type {string[]} */
-  const urls = [FALLBACK_VIDEO];
-  for (const egg of EGGS) urls.push(egg.video, egg.model, egg.audio);
+  const urls = EGGS.map((egg) => egg.audio);
 
   const unique = [...new Set(urls)];
   const probes = new Map();
@@ -103,39 +100,19 @@ export async function preflight({ onProgress } = {}) {
 
   const eggs = EGGS.map((egg) => ({
     egg,
-    model: pick(egg.model),
-    video: pick(egg.video),
     audio: pick(egg.audio),
   }));
 
-  const fallback = pick(FALLBACK_VIDEO);
   const flat = [...probes.values()];
   const summary = {
     total: flat.length,
     found: flat.filter((p) => p.exists).length,
     missing: flat.filter((p) => !p.exists).length,
-    /** 6 段彩蛋视频里有几个已经到位 */
-    eggVideosReady: eggs.filter((e) => e.video.exists).length,
-    /** 6 个建筑 GLB 里有几个已经到位 */
-    modelsReady: eggs.filter((e) => e.model.exists).length,
     /** 6 个音效里有几个已经到位 */
     audiosReady: eggs.filter((e) => e.audio.exists).length,
-    fallbackVideoReady: fallback.exists,
   };
 
-  return { probes, eggs, fallback, summary, all: flat };
-}
-
-/**
- * 给某个彩蛋挑一段「现在就能播」的视频。
- * @param {{video:Probe}} entry preflight() 返回的 eggs[i]
- * @param {Probe} fallback
- * @returns {{src:string, real:boolean, video:Probe|null}}
- */
-export function resolveVideo(entry, fallback) {
-  if (entry?.video?.exists) return { src: entry.video.url, real: true, video: entry.video };
-  if (fallback?.exists) return { src: fallback.url, real: false, video: fallback };
-  return { src: '', real: false, video: null };
+  return { probes, eggs, summary, all: flat };
 }
 
 /** 人类可读的体积 */

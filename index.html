@@ -9,20 +9,8 @@
 
 <link rel="stylesheet" href="./css/base.css" />
 <link rel="stylesheet" href="./css/shell.css" />
+<link rel="stylesheet" href="./css/stage2d.css" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⛩️</text></svg>" />
-
-<!--
-  零构建：three.js 直接由仓库里的 vendor/three 提供，不依赖任何 CDN。
-  注意：importmap 必须在任何 module 脚本之前。
--->
-<script type="importmap">
-{
-  "imports": {
-    "three": "./vendor/three/three.module.js",
-    "three/addons/": "./vendor/three/addons/"
-  }
-}
-</script>
 </head>
 
 <body>
@@ -33,14 +21,12 @@
     <div class="scroll__track" data-track>
       <canvas class="scroll__art" data-art aria-hidden="true"></canvas>
       <div class="eggs" data-eggs></div>
+      <div class="buildings" data-buildings></div>
     </div>
   </div>
 
-  <!-- ══════════ Three.js 建筑层（透明覆盖在长卷之上） ══════════ -->
-  <canvas id="stage3d" class="stage3d" aria-hidden="true"></canvas>
-
-  <!-- ══════════ 视频 / 弹层容器 ══════════ -->
-  <div id="layers" class="layers"></div>
+  <!-- ══════════ 纯 2D 粒子层（全屏，覆盖在长卷之上） ══════════ -->
+  <canvas id="stage2d" class="stage2d" aria-hidden="true"></canvas>
 
   <!-- ══════════ 顶部 HUD ══════════ -->
   <header class="hud hud--top">
@@ -50,7 +36,7 @@
     </div>
 
     <div class="hud__actions">
-      <span class="stage-note" data-stage-note title="">3D 舞台初始化中…</span>
+      <span class="stage-note" data-stage-note title="">特效初始化中…</span>
       <button type="button" class="btn" data-act="sound" data-on="true" title="音效开关">音效 开</button>
       <button type="button" class="btn" data-act="next" title="跳到还没点亮的彩蛋">下一处彩蛋</button>
       <button type="button" class="btn" data-act="debug" title="调试面板（快捷键 D）">调试</button>
@@ -68,7 +54,7 @@
       <div class="progress__fill" data-progress-fill></div>
     </div>
     <p class="hud__keys">
-      <kbd>拖动</kbd> / <kbd>滚轮</kbd> / <kbd>←</kbd><kbd>→</kbd> 移动长卷　·　<kbd>D</kbd> 调试面板　·　<kbd>Esc</kbd> 跳过视频
+      <kbd>拖动</kbd> / <kbd>滚轮</kbd> / <kbd>←</kbd><kbd>→</kbd> 移动长卷　·　<kbd>D</kbd> 调试面板
     </p>
   </footer>
 

@@ -2,17 +2,20 @@
  * 全项目「单一数据源」。
  *
  * 所有跟内容/素材有关的东西都写在这里，其它模块只读不改。
- * 这样 6 个彩蛋 → 6 段视频 → 6 座建筑 的对应关系只有一处定义，
- * 美术/视频同学按下面的文件名交素材即可自动接上，前端不用改代码。
+ * 这样 6 个彩蛋 → 6 座天宫建筑 → 6 个音效 的对应关系只有一处定义，
+ * 美术/文案同学按下面的文件名交素材即可自动接上，前端不用改代码。
  *
  * ⚠️ 改这里之前先看一眼 docs/ASSETS.md 的命名规范。
+ *
+ * 2026-10-04 变更：放弃 3D 建模 + AI 视频，改纯 2D（SVG 描边 + 粒子 + 伪 3D）。
+ * 彩蛋只关联两样东西：建筑造型（shape → stage2d.js 里的 SVG 线稿）+ 音效（audio）。
  */
 
-/** 版本号：素材自检面板、调试面板都会显示，方便对账 */
+/** 版本号：调试面板会显示，方便对账 */
 export const BUILD = {
-  stage: 'Day1',
+  stage: 'Day3',
   name: '贵州人间长卷 · 点亮天宫',
-  version: '0.1.0',
+  version: '0.2.0',
 };
 
 /**
@@ -20,8 +23,9 @@ export const BUILD = {
  *
  * x, y  —— 彩蛋在长卷上的位置，取值 0~1（相对整幅长卷的宽 / 高）。
  *          美术出图后，按壁画上实际藏彩蛋的位置微调这两个数即可。
- * model —— 建筑同学交付的 GLB（Day2 建，缺失时自动降级成占位建筑）
- * video —— 计科B 剪的「建筑长出来」短视频（Day2 生成，缺失时自动跳过）
+ * building —— 点中后长出来的天宫建筑名（信息卡显示）
+ * shape —— 建筑造型，对应 stage2d.js 里的 SVG 线稿
+ * hue  —— 建筑的色相（0~1，乘 360 得到 HSL 色相）
  * audio —— 音效（缺失时自动用 WebAudio 合成一声钟磬，保证有反馈）
  */
 export const EGGS = [
@@ -32,12 +36,9 @@ export const EGGS = [
     title: '抹茶铺',
     hint: '抹茶铺，有人喝茶',
     building: '南天门式城楼',
-    model: 'assets/models/01-tongren-nantianmen.glb',
-    video: 'assets/video/01-tongren.mp4',
     audio: 'assets/audio/01-tongren.mp3',
     x: 0.090,
     y: 0.585,
-    // 占位建筑造型：城楼 = 台基 + 楼身 + 重檐 + 门洞
     shape: 'gateTower',
     hue: 0.09,
   },
@@ -48,8 +49,6 @@ export const EGGS = [
     title: '鼓楼',
     hint: '鼓楼下有人唱侗歌',
     building: '天宫鼓楼，飞檐入云',
-    model: 'assets/models/02-dongzhai-gulou.glb',
-    video: 'assets/video/02-dongzhai.mp4',
     audio: 'assets/audio/02-dongzhai.mp3',
     x: 0.257,
     y: 0.520,
@@ -63,8 +62,6 @@ export const EGGS = [
     title: '桥上渡影',
     hint: '桥上有人渡影',
     building: '天宫廊桥，横跨云海',
-    model: 'assets/models/03-fengyuqiao-langqiao.glb',
-    video: 'assets/video/03-fengyuqiao.mp4',
     audio: 'assets/audio/03-fengyuqiao.mp3',
     x: 0.424,
     y: 0.640,
@@ -78,8 +75,6 @@ export const EGGS = [
     title: '水中垂钓',
     hint: '水中倒影有人垂钓',
     building: '天宫楼阁，浮于云面',
-    model: 'assets/models/04-jiaxiulou-louge.glb',
-    video: 'assets/video/04-jiaxiulou.mp4',
     audio: 'assets/audio/04-jiaxiulou.mp3',
     x: 0.591,
     y: 0.500,
@@ -93,8 +88,6 @@ export const EGGS = [
     title: '山间挑担',
     hint: '山间有人挑担',
     building: '天宫山坡，依云而建',
-    model: 'assets/models/05-zhenyuan-shangong.glb',
-    video: 'assets/video/05-zhenyuan.mp4',
     audio: 'assets/audio/05-zhenyuan.mp3',
     x: 0.758,
     y: 0.560,
@@ -108,8 +101,6 @@ export const EGGS = [
     title: '金顶祈福',
     hint: '金顶有人祈福',
     building: '天宫金顶，云海环绕',
-    model: 'assets/models/06-fanjingshan-jinding.glb',
-    video: 'assets/video/06-fanjingshan.mp4',
     audio: 'assets/audio/06-fanjingshan.mp3',
     x: 0.912,
     y: 0.470,
@@ -118,13 +109,10 @@ export const EGGS = [
   },
 ];
 
-/** 素材缺失时，用来兜底测试「视频播放」这条链路的那段素材 */
-export const FALLBACK_VIDEO = 'assets/video/selftest/cc0-testclip.mp4';
-
-/** 壁画长卷（Day2 由计科B 用 AI 生成后替换；现在用代码画的占位长卷顶上） */
+/** 壁画长卷（现在用的是团队出的真图，路径指到 assets/img/scroll-guizhou.png） */
 export const SCROLL = {
-  /** AI 出图后，把这里改成图片路径，例如 'assets/img/scroll-guizhou.jpg' */
-  image: null,
+  /** 团队的真图。改成 null 就回到代码画的占位长卷 */
+  image: 'assets/img/scroll-guizhou.png',
   /**
    * 长卷的 宽/高 比。
    *
@@ -148,24 +136,18 @@ export const SCROLL = {
   snapToEgg: false,
 };
 
-/** 3D 舞台 */
-export const STAGE3D = {
+/** 纯 2D 特效舞台 */
+export const STAGE2D = {
   enabled: true,
-  /** 建筑从壁画里长出来的时长（秒） */
-  growDuration: 1.5,
-  /** 建筑自转速度（弧度/秒） */
-  spinSpeed: 0.28,
-  /** 建筑悬停浮动振幅（世界单位） */
-  floatAmplitude: 0.06,
-  /** 点亮后的自发光强度 */
-  glowIntensity: 1.5,
-  /** 相机视锥高度（世界单位）；调小 = 建筑看起来更大 */
-  frustumHeight: 3.2,
+  /** 建筑从壁画里立起来的时长（秒）；CSS 里还有同名过渡，改这里主要供 JS 参考 */
+  growDuration: 1.1,
   /**
    * 建筑高度占视口高度的比例。0.34 大约是一屏的三分之一 ——
-   * 够醒目（毕竟是"天宫长出来"的高光时刻），又不会把壁画整个盖住。
+   * 够醒目（毕竟是「天宫长出来」的高光时刻），又不会把壁画整个盖住。
    */
   buildingHeightRatio: 0.34,
+  /** 每次点亮爆发的粒子数量 */
+  particleCount: 70,
 };
 
 /** 文案 */

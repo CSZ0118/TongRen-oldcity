@@ -205,19 +205,9 @@ body.is-ready .scroll__track {
   }
 }
 
-/* ── 3D 舞台 ────────────────────────────────────────────── */
+/* ── 2D 建筑层 / 粒子画布 ── 见 css/stage2d.css ─────────── */
 
-.stage3d {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 5;
-  mix-blend-mode: normal;
-}
-
-/* ── 视频 / 弹层容器 ────────────────────────────────────── */
+/* ── 视频 / 弹层容器（暂未使用，保留占位） ────────────────── */
 
 .layers {
   position: fixed;
@@ -570,7 +560,7 @@ body.is-ready .scroll__track {
 
 /* 全点亮后整幅画暖起来 */
 body.is-finale .scroll__art,
-body.is-finale .stage3d {
+body.is-finale .buildings {
   filter: saturate(1.15) brightness(1.08) contrast(1.03);
 }
 
