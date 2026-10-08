@@ -26,6 +26,7 @@ const refs = {
   track: $('[data-track]'),
   art: $('[data-art]'),
   eggLayer: $('[data-eggs]'),
+  revealsLayer: $('[data-reveals]'),
   buildingsLayer: $('[data-buildings]'),
   stageCanvas: $('#stage2d'),
   progressText: $('[data-progress-text]'),
@@ -54,6 +55,8 @@ let toastTimer = 0;
 let rafId = 0;
 let lastFrame = 0;
 let artInfo = null;
+/** @type {Map<string, HTMLElement>} 每个彩蛋对应的"场景活过来"浮现图 */
+const reveals = new Map();
 
 // ────────────────────────────────────────────────────────────
 // 启动
@@ -70,6 +73,7 @@ async function boot() {
   // 1) 长卷 + 占位壁画（先让画面出来，别让用户对着白屏等）
   scroll = new LongScroll(refs.viewport, SCROLL).mount();
   paintArt();
+  buildReveals();
   scroll.subscribe((s) => {
     refs.progressFill.style.transform = `scaleX(${Math.max(0.001, s.progress)})`;
   });
@@ -79,6 +83,7 @@ async function boot() {
   eggs = new EggField(refs.eggLayer, {
     onFound: onEggFound,
     onProgress: renderProgress,
+    persist: false, // 每次进入都从头开始：黑白长卷、零建筑，点了彩蛋才长出来
   });
 
   // 拖拽之后的第一次 click 当误触丢掉，否则拖长卷会莫名点亮彩蛋
@@ -159,6 +164,25 @@ function paintArt() {
   });
 }
 
+// 每个彩蛋的"场景活过来"浮现图（透明 PNG/SVG，点中后淡入）。
+// 素材没到位的会静默隐藏，不会漏破图。
+function buildReveals() {
+  EGGS.forEach((egg) => {
+    if (!egg.reveal) return;
+    const img = document.createElement('img');
+    img.className = 'reveal';
+    img.src = egg.reveal;
+    img.alt = '';
+    img.draggable = false;
+    img.style.setProperty('--x', `${(egg.x * 100).toFixed(3)}%`);
+    img.style.setProperty('--y', `${(egg.y * 100).toFixed(3)}%`);
+    img.style.setProperty('--w', `${((egg.revealW ?? 0.045) * 100).toFixed(2)}%`);
+    img.onerror = () => img.remove();
+    refs.revealsLayer.appendChild(img);
+    reveals.set(egg.id, img);
+  });
+}
+
 function bindResize() {
   window.addEventListener('resize', () => {
     window.clearTimeout(repaintTimer);
@@ -211,6 +235,10 @@ function onEggFound(egg, index, replay) {
 
   // ② 进度
   const state = eggs.markFound(egg.id);
+  syncBgm(); // 背景乐跟着进度切：开场春 → 中段升 → 结尾冬
+
+  // ②b 壁画"活过来"：这个场景的人物/活动浮现
+  reveals.get(egg.id)?.classList.add('is-in');
 
   // ③ 把这座建筑对应的壁画位置挪到屏幕中间
   scroll.centerOn(egg.x);
@@ -259,6 +287,16 @@ function renderProgress(found, total) {
     el.classList.toggle('is-on', i < found);
   });
   document.body.classList.toggle('is-complete', found === total);
+
+  // 整幅渐进上色：初始黑白，每点亮 1 个彩蛋彩色度 +1/6，全亮 = 全彩
+  if (SCROLL.image && refs.art) {
+    refs.art.style.filter = `grayscale(${Math.max(0, 1 - found / total)})`;
+  }
+}
+
+/** 背景乐跟着进度走：开场春 → 中段升 → 结尾冬 */
+function syncBgm() {
+  audio.updateBgm(eggs ? eggs.count : 0, eggs ? eggs.total : EGGS.length);
 }
 
 function buildTicks() {
@@ -292,7 +330,9 @@ function exitFinale() {
 
 function resetProgress() {
   eggs.reset();
+  syncBgm(); // 回到开场春
   stage?.reset();
+  reveals.forEach((img) => img.classList.remove('is-in'));
   document.body.classList.remove('is-finale', 'is-complete');
   exitFinale();
   renderProgress(0, EGGS.length);
@@ -337,7 +377,10 @@ function wireUI() {
       audio.setEnabled(soundOn);
       btn.textContent = soundOn ? COPY.soundOn : COPY.soundOff;
       btn.dataset.on = String(soundOn);
-      if (soundOn) audio.unlock();
+      if (soundOn) {
+        audio.unlock();
+        syncBgm();
+      }
     }
     if (act === 'next') {
       if (!eggs.focusFirstUnfound(scroll)) toast('六座天宫都亮了');
@@ -364,9 +407,10 @@ function wireUI() {
     }
   });
 
-  // 首次交互解锁音频
+  // 首次交互解锁音频 + 启动背景乐
   const unlock = () => {
     audio.unlock();
+    syncBgm();
     window.removeEventListener('pointerdown', unlock);
     window.removeEventListener('keydown', unlock);
   };

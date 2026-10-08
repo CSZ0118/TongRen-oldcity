@@ -21,11 +21,13 @@ export const BUILD = {
 /**
  * 6 个彩蛋 / 6 座天宫建筑。
  *
- * x, y  —— 彩蛋在长卷上的位置，取值 0~1（相对整幅长卷的宽 / 高）。
- *          美术出图后，按壁画上实际藏彩蛋的位置微调这两个数即可。
+ * x, y  —— 彩蛋「小圆球」热点在长卷上的位置（0~1，相对长卷宽/高）。
+ * bx,by —— 建筑从哪长出来（默认跟着 x/y；想跟圆球错开就单独设）
  * building —— 点中后长出来的天宫建筑名（信息卡显示）
- * shape —— 建筑造型，对应 stage2d.js 里的 SVG 线稿
- * hue  —— 建筑的色相（0~1，乘 360 得到 HSL 色相）
+ * shape —— 建筑造型，对应 config.js 的 BUILDING_IMG（真图 PNG）
+ * hue  —— 建筑的色相（0~1，乘 360 得到 HSL 色相，用于光晕/粒子）
+ * scale —— 建筑大小缩放（1=默认，1.3 放大 / 0.8 缩小）
+ * flipX —— 是否水平镜像（true=左右翻转）
  * audio —— 音效（缺失时自动用 WebAudio 合成一声钟磬，保证有反馈）
  */
 export const EGGS = [
@@ -37,10 +39,14 @@ export const EGGS = [
     hint: '抹茶铺，有人喝茶',
     building: '南天门式城楼',
     audio: 'assets/audio/01-tongren.mp3',
-    x: 0.053,
-    y: 0.690,
+    x: 0.073,
+    y: 0.73,
+    bx: 0.073,
+    by: 0.73,
     shape: 'gateTower',
+    scale: 1.6,
     hue: 0.09,
+    reveal: 'assets/reveal/01-tongren-people.svg', // 占位：真人图到位后换成 png
   },
   {
     id: 'dongzhai',
@@ -51,9 +57,14 @@ export const EGGS = [
     building: '天宫鼓楼，飞檐入云',
     audio: 'assets/audio/02-dongzhai.mp3',
     x: 0.318,
-    y: 0.520,
+    y: 0.7,
+    bx: 0.318,
+    by: 0.88,
     shape: 'drumTower',
+    scale: 3,
     hue: 0.12,
+    reveal: 'assets/reveal/02-dongzhai-people.svg', // 占位：真人图到位后换成 png
+    revealW: 0.05,
   },
   {
     id: 'fengyuqiao',
@@ -63,10 +74,15 @@ export const EGGS = [
     hint: '桥上有人渡影',
     building: '天宫廊桥，横跨云海',
     audio: 'assets/audio/03-fengyuqiao.mp3',
-    x: 0.424,
-    y: 0.640,
+    x: 0.49,
+    y: 0.69,
+    bx: 0.47,
+    by: 0.97,
     shape: 'bridge',
+    scale: 3.3,
+    flipX: true,
     hue: 0.55,
+    reveal: 'assets/reveal/03-fengyuqiao-people.svg', // 占位：真人图到位后换成 png
   },
   {
     id: 'jiaxiulou',
@@ -76,10 +92,14 @@ export const EGGS = [
     hint: '水中倒影有人垂钓',
     building: '天宫楼阁，浮于云面',
     audio: 'assets/audio/04-jiaxiulou.mp3',
-    x: 0.552,
-    y: 0.500,
+    x: 0.560,
+    y: 0.499,
+    bx: 0.538,
+    by: 0.698,
     shape: 'pavilion',
+    scale: 2.2,
     hue: 0.58,
+    reveal: 'assets/reveal/04-jiaxiulou-people.svg', // 占位：真人图到位后换成 png
   },
   {
     id: 'zhenyuan',
@@ -89,10 +109,14 @@ export const EGGS = [
     hint: '山间有人挑担',
     building: '天宫山坡，依云而建',
     audio: 'assets/audio/05-zhenyuan.mp3',
-    x: 0.743,
-    y: 0.200,
+    x: 0.770,
+    y: 0.460,
+    bx: 0.743,
+    by: 0.600,
     shape: 'hillside',
+    scale: 2.2,
     hue: 0.30,
+    reveal: 'assets/reveal/05-zhenyuan-people.svg', // 占位：真人图到位后换成 png
   },
   {
     id: 'fanjingshan',
@@ -102,10 +126,14 @@ export const EGGS = [
     hint: '金顶有人祈福',
     building: '天宫金顶，云海环绕',
     audio: 'assets/audio/06-fanjingshan.mp3',
-    x: 0.930,
-    y: 0.250,
+    x: 0.980,
+    y: 0.50,
+    bx: 0.880,
+    by: 0.580,
     shape: 'goldenSummit',
+    scale: 2.0,
     hue: 0.10,
+    reveal: 'assets/reveal/06-fanjingshan-people.svg', // 占位：真人图到位后换成 png
   },
 ];
 
@@ -148,6 +176,30 @@ export const STAGE2D = {
   buildingHeightRatio: 0.34,
   /** 每次点亮爆发的粒子数量 */
   particleCount: 70,
+};
+
+/** 6 座天宫的透明底真图（即梦出图 + 抠图）。shape → 图片路径 */
+export const BUILDING_IMG = {
+  gateTower: 'assets/buildings/01-gateTower.png',
+  drumTower: 'assets/buildings/02-drumTower.png',
+  bridge: 'assets/buildings/03-bridge.png',
+  pavilion: 'assets/buildings/04-pavilion.png',
+  hillside: 'assets/buildings/05-hillside.png',
+  goldenSummit: 'assets/buildings/06-goldenSummit.png',
+};
+
+/** 背景乐（BGM）：三段随进度切换，音频实现见 audio.js */
+export const BGM = {
+  // 三段背景乐基名（不带扩展名，audio.js 自动补 .ogg / .mp3 双格式）
+  opening: 'assets/bgm/bgm-opening-spring-v05',
+  mid: 'assets/bgm/bgm-mid-rise-v05',
+  ending: 'assets/bgm/bgm-ending-winter-v05',
+  // 点亮几座天宫后从「开场春」切到「中段升」（6 座取一半）
+  midThreshold: 3,
+  // 背景乐整体音量（比音效低，别盖住钟磬）
+  volume: 0.5,
+  // 切换时的淡入淡出时长（毫秒）
+  fadeMs: 600,
 };
 
 /** 文案 */

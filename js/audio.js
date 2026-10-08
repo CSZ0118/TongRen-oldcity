@@ -10,6 +10,7 @@
  * 这样「用户手势解锁音频」这条链路 Day1 就是通的。
  */
 import { probe } from './assets.js';
+import { BGM } from './config.js';
 
 export class AudioBus {
   constructor() {
@@ -20,6 +21,10 @@ export class AudioBus {
     this.current = null;
     /** 最近一次播放的结果，调试面板会显示 */
     this.lastResult = null;
+    /** 背景乐：{ el: HTMLAudioElement, name: string } | null */
+    this.bgm = null;
+    /** 当前背景乐名字，用于同名去重 */
+    this.bgmName = null;
   }
 
   /** 必须在用户手势里调用，否则浏览器会把 AudioContext 挂起 */
@@ -35,7 +40,10 @@ export class AudioBus {
 
   setEnabled(on) {
     this.enabled = on;
-    if (!on) this.stop();
+    if (!on) {
+      this.stop();
+      this.stopBgm();
+    }
   }
 
   stop() {
@@ -47,6 +55,74 @@ export class AudioBus {
       }
       this.current = null;
     }
+  }
+
+  /**
+   * 背景乐跟着进度走：开场春（循环）→ 中段升（循环）→ 结尾冬（放一遍）。
+   * @param {number} found 已点亮数
+   * @param {number} total 总数
+   */
+  updateBgm(found, total) {
+    if (!this.enabled) return;
+    if (found >= total) this.switchBgm('ending', { loop: false });
+    else if (found >= BGM.midThreshold) this.switchBgm('mid', { loop: true });
+    else this.switchBgm('opening', { loop: true });
+  }
+
+  /**
+   * 切换背景乐：淡出旧曲、淡入新曲；同名不重切。
+   * @param {'opening'|'mid'|'ending'} name
+   * @param {{loop?:boolean}} [opts]
+   */
+  switchBgm(name, { loop = true } = {}) {
+    if (!this.enabled || this.bgmName === name) return;
+    const base = BGM[name];
+    if (!base) return;
+
+    const el = new Audio();
+    el.loop = loop;
+    el.preload = 'auto';
+    el.volume = 0;
+    el.append(
+      Object.assign(document.createElement('source'), { src: `${base}.ogg`, type: 'audio/ogg' }),
+      Object.assign(document.createElement('source'), { src: `${base}.mp3`, type: 'audio/mpeg' }),
+    );
+
+    const old = this.bgm?.el ?? null;
+    this.bgm = { el, name };
+    this.bgmName = name;
+
+    const vol = BGM.volume ?? 0.5;
+    el.play().then(() => this._fade(el, 0, vol, BGM.fadeMs)).catch(() => {});
+    if (old) {
+      this._fade(old, old.volume, 0, BGM.fadeMs, () => {
+        old.pause();
+        old.removeAttribute('src');
+        old.load();
+      });
+    }
+  }
+
+  /** 关声音时停掉背景乐 */
+  stopBgm() {
+    const el = this.bgm?.el;
+    if (el) {
+      try { el.pause(); } catch { /* ignore */ }
+    }
+    this.bgm = null;
+    this.bgmName = null;
+  }
+
+  /** 音量渐变（from → to，走 rAF），到点可回调 */
+  _fade(el, from, to, ms, done) {
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / ms);
+      el.volume = from + (to - from) * k;
+      if (k < 1) requestAnimationFrame(step);
+      else if (done) done();
+    };
+    requestAnimationFrame(step);
   }
 
   /**

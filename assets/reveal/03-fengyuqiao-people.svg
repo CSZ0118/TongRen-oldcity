@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 130">
+  <!-- 占位：风雨桥渡船——一人撑船，真图到位后换 png -->
+  <g fill="#2a241d" opacity="0.9">
+    <path d="M60 96 q40 -14 100 -4 l0 8 q-58 -10 -100 4 z"/>
+    <circle cx="118" cy="56" r="11"/>
+    <path d="M104 72 c0 -12 6 -15 14 -15 c8 0 14 3 14 15 l0 18 l-28 0 z"/>
+    <path d="M118 78 l46 10"/>
+  </g>
+</svg>

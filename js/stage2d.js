@@ -14,21 +14,30 @@
  *   init / resize / grow / rebuildFound / setFinale / reset / buildings / ready / info
  */
 
-import { STAGE2D } from './config.js';
+import { STAGE2D, BUILDING_IMG } from './config.js';
 
 /** 6 座天宫的 SVG 线稿（stroke-only，viewBox 0 0 220 200）。占位级，经B 可用真线稿替换 */
 const SHAPES = {
-  // 南天门式城楼
-  gateTower: [
-    'M28 178 L192 178 L186 190 L34 190 Z',
-    'M40 116 L40 178 M180 116 L180 178',
-    'M84 178 L84 150 Q100 130 116 150 L116 178',
-    'M100 60 L62 96 Q58 100 62 102 L138 102 Q142 100 138 96 Z',
-    'M100 60 L100 102',
-    'M100 50 L100 60 M95 54 Q100 47 105 54',
-    'M100 102 L36 134 Q32 138 36 140 L164 140 Q168 138 164 134 Z',
-    'M48 116 L172 116',
-  ],
+  // 南天门式城楼（精细版：填充色块 + 轮廓线）
+  gateTower: {
+    fill: [
+      'M28 178 L192 178 L186 190 L34 190 Z',                                          // 台基
+      'M40 116 L40 178 L84 178 L84 150 Q100 130 116 150 L116 178 L180 178 L180 116 Z', // 城楼墙体（左右，留门洞）
+      'M100 60 L62 96 Q58 100 62 102 L138 102 Q142 100 138 96 Z',                       // 中层屋顶
+      'M100 102 L36 134 Q32 138 36 140 L164 140 Q168 138 164 134 Z',                    // 上层大屋顶
+      'M100 50 L95 54 Q100 47 105 54 Z',                                               // 顶部尖饰
+    ],
+    line: [
+      'M28 178 L192 178 L186 190 L34 190 Z',
+      'M40 116 L40 178 M180 116 L180 178',
+      'M84 178 L84 150 Q100 130 116 150 L116 178',
+      'M100 60 L62 96 Q58 100 62 102 L138 102 Q142 100 138 96 Z',
+      'M100 60 L100 102',
+      'M100 50 L100 60 M95 54 Q100 47 105 54',
+      'M100 102 L36 134 Q32 138 36 140 L164 140 Q168 138 164 134 Z',
+      'M48 116 L172 116',
+    ],
+  },
   // 天宫鼓楼（多层密檐往上收）
   drumTower: [
     'M46 186 L174 186 L168 196 L52 196 Z',
@@ -130,12 +139,52 @@ export class Stage2D {
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   }
 
-  /** 用 shape 造一个 SVG 建筑线稿元素 */
-  svgFor(shape) {
+  /** 用 shape 造一个 SVG 建筑元素（填充色块 + 轮廓线，可选渐变） */
+  svgFor(shape, hue = 40) {
     const svg = document.createElementNS(SVGNS, 'svg');
     svg.setAttribute('viewBox', '0 0 220 200');
     svg.setAttribute('aria-hidden', 'true');
-    for (const d of (SHAPES[shape] || SHAPES.gateTower)) {
+
+    // 兼容两种结构：对象 { fill, line } 或纯线稿数组
+    const spec = SHAPES[shape] || SHAPES.gateTower;
+    const fills = Array.isArray(spec.fill) ? spec.fill : [];
+    const lines = Array.isArray(spec.line) ? spec.line : (Array.isArray(spec) ? spec : []);
+
+    // 上下渐变：填充色块从上到下由亮变暗，营造体积感
+    let gradId = '';
+    if (fills.length > 0) {
+      const h = Math.round(hue * 360);
+      gradId = `b2d-g-${shape}`;
+      const defs = document.createElementNS(SVGNS, 'defs');
+      const grad = document.createElementNS(SVGNS, 'linearGradient');
+      grad.setAttribute('id', gradId);
+      grad.setAttribute('x1', '0');
+      grad.setAttribute('y1', '0');
+      grad.setAttribute('x2', '0');
+      grad.setAttribute('y2', '1');
+      const stops = [
+        ['0%', `hsl(${h} 72% 74%)`],
+        ['55%', `hsl(${h} 60% 56%)`],
+        ['100%', `hsl(${h} 58% 40%)`],
+      ];
+      for (const [off, color] of stops) {
+        const st = document.createElementNS(SVGNS, 'stop');
+        st.setAttribute('offset', off);
+        st.setAttribute('stop-color', color);
+        grad.appendChild(st);
+      }
+      defs.appendChild(grad);
+      svg.appendChild(defs);
+    }
+
+    for (const d of fills) {
+      const p = document.createElementNS(SVGNS, 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('class', 'fill');
+      if (gradId) p.setAttribute('fill', `url(#${gradId})`);
+      svg.appendChild(p);
+    }
+    for (const d of lines) {
       const p = document.createElementNS(SVGNS, 'path');
       p.setAttribute('d', d);
       p.setAttribute('class', 'draw');
@@ -144,32 +193,37 @@ export class Stage2D {
     return svg;
   }
 
-  /** 造建筑 DOM，append 到 host 后准备好描边参数。返回 {el, paths} */
+  /** 用透明底 PNG 造建筑元素（随 .show 缩放/淡入/立起） */
+  imgFor(egg) {
+    const img = document.createElement('img');
+    img.className = 'building__img';
+    img.src = BUILDING_IMG[egg.shape] || '';
+    img.alt = egg.building;
+    img.draggable = false;
+    return img;
+  }
+
+  /** 造建筑 DOM，append 到 host。返回 {el, paths}（paths 留给 SVG 版，PNG 版为空） */
   makeBuilding(egg) {
     const el = document.createElement('div');
     el.className = 'building';
     el.dataset.id = egg.id;
-    el.style.setProperty('--x', `${(egg.x * 100).toFixed(3)}%`);
-    el.style.setProperty('--y', `${(egg.y * 100).toFixed(3)}%`);
+    el.style.setProperty('--x', `${((egg.bx ?? egg.x) * 100).toFixed(3)}%`);
+    el.style.setProperty('--y', `${((egg.by ?? egg.y) * 100).toFixed(3)}%`);
     el.style.setProperty('--h', `${(STAGE2D.buildingHeightRatio * 100).toFixed(1)}%`);
     el.style.setProperty('--hue', String(Math.round(egg.hue * 360)));
+    el.style.setProperty('--scale', String(egg.scale || 1));
+    el.style.setProperty('--flip', egg.flipX ? '-1' : '1');
 
     const glow = document.createElement('div');
     glow.className = 'building__glow';
     const shadow = document.createElement('div');
     shadow.className = 'building__shadow';
-    const svg = this.svgFor(egg.shape);
-    el.append(svg, glow, shadow);
+    const img = this.imgFor(egg);
+    el.append(img, glow, shadow);
     this.host.appendChild(el);
 
-    // 挂到文档里之后再取 getTotalLength 才可靠
-    const paths = [...svg.querySelectorAll('.draw')];
-    for (const p of paths) {
-      const len = p.getTotalLength();
-      p.style.strokeDasharray = String(len);
-      p.style.strokeDashoffset = String(len);
-    }
-    return { el, paths };
+    return { el, paths: [] };
   }
 
   /**
@@ -192,7 +246,7 @@ export class Stage2D {
     }
 
     const { el, paths } = this.makeBuilding(egg);
-    const building = { egg, el, paths, source: 'svg' };
+    const building = { egg, el, paths, source: 'png' };
     this.buildings.set(egg.id, building);
 
     requestAnimationFrame(() => {
@@ -273,7 +327,7 @@ export class Stage2D {
     this.reset();
     for (const egg of foundEggs) {
       const { el, paths } = this.makeBuilding(egg);
-      this.buildings.set(egg.id, { egg, el, paths, source: 'svg' });
+      this.buildings.set(egg.id, { egg, el, paths, source: 'png' });
       el.classList.add('show');
       for (const p of paths) p.style.strokeDashoffset = '0';
     }

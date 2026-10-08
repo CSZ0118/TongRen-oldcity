@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 130">
+  <!-- 占位：抹茶铺磨茶——人推石磨，真图到位后换 png -->
+  <g fill="#2a241d" opacity="0.9">
+    <ellipse cx="150" cy="90" rx="42" ry="10"/>
+    <rect x="140" y="60" width="22" height="30" rx="8"/>
+    <circle cx="86" cy="40" r="12"/>
+    <path d="M70 58 c0 -13 7 -16 16 -16 c9 0 16 3 16 16 l0 36 l-32 0 z"/>
+    <path d="M98 76 l46 8"/>
+  </g>
+</svg>

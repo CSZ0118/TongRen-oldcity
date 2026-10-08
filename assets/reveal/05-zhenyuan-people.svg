@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 130">
+  <!-- 占位：镇远山间挑担——人挑担，真图到位后换 png -->
+  <g fill="#2a241d" opacity="0.9">
+    <path d="M20 108 q80 -18 180 -4 l0 6 q-100 -14 -180 4 z"/>
+    <circle cx="110" cy="44" r="12"/>
+    <path d="M94 62 c0 -13 7 -16 16 -16 c9 0 16 3 16 16 l0 40 l-32 0 z"/>
+    <path d="M110 62 l-46 4"/>
+    <path d="M110 62 l46 4"/>
+    <rect x="42" y="60" width="26" height="18" rx="5"/>
+    <rect x="152" y="60" width="26" height="18" rx="5"/>
+  </g>
+</svg>
