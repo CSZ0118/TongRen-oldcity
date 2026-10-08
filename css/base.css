@@ -63,6 +63,7 @@ body {
 html {
   background: #0e1a1d;
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -87,6 +88,9 @@ p {
 button {
   font: inherit;
   color: inherit;
+  /* 移动端：去掉点按延迟、防止双击缩放、去掉灰色高亮块 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 img,
