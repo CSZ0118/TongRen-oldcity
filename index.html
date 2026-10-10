@@ -23,6 +23,7 @@
       <div class="reveals" data-reveals></div>
       <div class="eggs" data-eggs></div>
       <div class="buildings" data-buildings></div>
+      <div class="npcs" data-npcs></div>
     </div>
   </div>
 
@@ -39,7 +40,7 @@
     <div class="hud__actions">
       <span class="stage-note" data-stage-note title="">特效初始化中…</span>
       <button type="button" class="btn" data-act="sound" data-on="true" title="音效开关">音效 开</button>
-      <button type="button" class="btn btn--primary" data-act="next" title="跳到还没点亮的彩蛋">下一处彩蛋</button>
+      <button type="button" class="btn btn--primary" data-act="next" title="循环查看下一处彩蛋">下一处彩蛋</button>
       <button type="button" class="btn" data-act="debug" title="调试面板（快捷键 D）">调试</button>
       <button type="button" class="btn btn--ghost" data-act="reset" data-copy-reset>重看一遍</button>
     </div>
@@ -65,6 +66,9 @@
     <div data-card-body></div>
   </aside>
 
+  <!-- ══════════ 画卷题诗（点彩蛋后竖排浮在画卷上，几秒后淡出） ══════════ -->
+  <div id="poem-float" class="poem-float" hidden aria-hidden="true"></div>
+
   <!-- ══════════ 开场提示 ══════════ -->
   <div id="hint" class="hint" hidden>
     <span class="hint__arrow">←</span>
@@ -83,6 +87,21 @@
         <button type="button" class="btn" data-act="finale-reset">从头再来</button>
       </div>
     </div>
+  </div>
+
+  <!-- ══════════ NPC 对话面板 ══════════ -->
+  <div id="npc-panel" class="npc-panel" hidden>
+    <button type="button" class="npc-panel__x" data-act="npc-close" aria-label="关闭">✕</button>
+    <div class="npc-panel__head">
+      <span class="npc-panel__emoji" data-npc-emoji aria-hidden="true"></span>
+      <div class="npc-panel__id">
+        <h2 class="npc-panel__name" data-npc-name></h2>
+        <p class="npc-panel__role" data-npc-role></p>
+      </div>
+    </div>
+    <p class="npc-panel__hello" data-npc-hello></p>
+    <div class="npc-panel__questions" data-npc-questions></div>
+    <p class="npc-panel__answer" data-npc-answer hidden></p>
   </div>
 
   <!-- ══════════ 调试面板 ══════════ -->

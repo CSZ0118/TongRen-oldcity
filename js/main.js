@@ -35,6 +35,15 @@ const refs = {
   hint: $('#hint'),
   card: $('#card'),
   cardBody: $('[data-card-body]'),
+  poem: $('#poem-float'),
+  npcsLayer: $('[data-npcs]'),
+  npcPanel: $('#npc-panel'),
+  npcEmoji: $('[data-npc-emoji]'),
+  npcName: $('[data-npc-name]'),
+  npcRole: $('[data-npc-role]'),
+  npcHello: $('[data-npc-hello]'),
+  npcQuestions: $('[data-npc-questions]'),
+  npcAnswer: $('[data-npc-answer]'),
   finale: $('#finale'),
   finaleLine: $('[data-finale-line]'),
   debug: $('#debug'),
@@ -57,6 +66,12 @@ let lastFrame = 0;
 let artInfo = null;
 /** @type {Map<string, HTMLElement>} 每个彩蛋对应的"场景活过来"浮现图 */
 const reveals = new Map();
+/** @type {Map<string, HTMLElement>} 每个彩蛋对应的 NPC 徽章 */
+const npcs = new Map();
+/** 当前对话面板里的 NPC（问题点击时取答案用） */
+let currentNpc = null;
+/** 「下一处彩蛋」的轮转游标：0..5 循环 */
+let nextCursor = 0;
 
 // ────────────────────────────────────────────────────────────
 // 启动
@@ -246,8 +261,10 @@ function onEggFound(egg, index, replay) {
   // ④ 建筑从壁画里长出来（SVG 描边 + 伪 3D + 粒子）
   stage.grow(egg).catch((err) => console.warn('[stage2d] grow 失败：', err));
 
-  // ⑤ 信息卡
+  // ⑤ 信息卡 + 画卷题诗 + NPC
   showCard(egg, { replay });
+  showPoem(egg);
+  spawnNpc(egg);
 
   // ⑥ 全部点亮
   if (state.complete && state.first) enterFinale({ silent: false });
@@ -264,8 +281,8 @@ function showCard(egg, { replay }) {
   refs.cardBody.innerHTML = `
     <div class="card__no">${String(egg.no).padStart(2, '0')}</div>
     <h2 class="card__place">${egg.place}</h2>
-    <p class="card__hint">画里：${egg.hint}</p>
-    <p class="card__building">长出：<strong>${egg.building}</strong></p>
+    <h3 class="card__building">${egg.building}</h3>
+    ${egg.desc ? `<p class="card__desc">${egg.desc}</p>` : ''}
     <div class="card__tags">${tag}</div>
   `;
   refs.card.hidden = false;
@@ -278,6 +295,77 @@ function showCard(egg, { replay }) {
   showCard.timer = window.setTimeout(() => {
     refs.card.classList.remove('is-in');
   }, 7200);
+}
+
+/** 画卷题诗：点彩蛋后把四句诗竖排浮在画卷上，几秒后淡出 */
+function showPoem(egg) {
+  const lines = egg.poem ?? [];
+  if (!lines.length) return;
+
+  // 一列一列依次浮现：每句一个 <span>，动画延迟递增
+  refs.poem.innerHTML = lines
+    .map((line, i) => `<span style="animation-delay:${(i * 0.55).toFixed(2)}s">${line}</span>`)
+    .join('');
+  refs.poem.hidden = false;
+  refs.poem.classList.remove('is-out');
+  void refs.poem.offsetWidth; // 强制重排，让每次点亮都能重播逐句浮现
+
+  window.clearTimeout(showPoem.timer);
+  showPoem.timer = window.setTimeout(() => {
+    refs.poem.classList.add('is-out');
+  }, 8000);
+}
+
+// ────────────────────────────────────────────────────────────
+// NPC：每个地方一个可问问题的角色
+// ────────────────────────────────────────────────────────────
+
+/** 点亮彩蛋后，在壁画上长出这个 NPC 的徽章（可点击） */
+function spawnNpc(egg) {
+  if (!egg.npc || npcs.has(egg.id)) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'npc';
+  btn.dataset.id = egg.id;
+  btn.dataset.noDrag = 'false'; // 让滚动引擎别把它当拖拽起点（和彩蛋一致，否则点不动）
+  btn.style.setProperty('--x', `${(egg.x * 100).toFixed(3)}%`);
+  btn.style.setProperty('--y', `${((egg.y - 0.09) * 100).toFixed(3)}%`);
+  btn.setAttribute('aria-label', `问一问${egg.npc.name}（${egg.npc.role}）`);
+  btn.innerHTML = `
+    <span class="npc__emoji" aria-hidden="true">${egg.npc.emoji}</span>
+    <span class="npc__name">${egg.npc.name}</span>
+  `;
+  refs.npcsLayer.appendChild(btn);
+  npcs.set(egg.id, btn);
+}
+
+/** 打开对话面板：渲染 NPC 信息与问题按钮 */
+function openNpc(egg) {
+  const npc = egg.npc;
+  if (!npc) return;
+  currentNpc = npc;
+
+  refs.npcEmoji.textContent = npc.emoji;
+  refs.npcName.textContent = npc.name;
+  refs.npcRole.textContent = npc.role;
+  refs.npcHello.textContent = npc.hello;
+  refs.npcQuestions.innerHTML = npc.questions
+    .map((qa, i) => `<button type="button" class="npc-panel__q" data-q="${i}">${qa.q}</button>`)
+    .join('');
+  refs.npcAnswer.hidden = true;
+  refs.npcAnswer.textContent = '';
+
+  refs.npcPanel.hidden = false;
+  refs.npcPanel.classList.remove('is-in');
+  void refs.npcPanel.offsetWidth;
+  refs.npcPanel.classList.add('is-in');
+}
+
+function closeNpc() {
+  refs.npcPanel.classList.remove('is-in');
+  window.setTimeout(() => {
+    refs.npcPanel.hidden = true;
+  }, 300);
 }
 
 function renderProgress(found, total) {
@@ -333,6 +421,10 @@ function resetProgress() {
   syncBgm(); // 回到开场春
   stage?.reset();
   reveals.forEach((img) => img.classList.remove('is-in'));
+  refs.poem?.classList.add('is-out');
+  npcs.forEach((n) => n.remove());
+  npcs.clear();
+  closeNpc();
   document.body.classList.remove('is-finale', 'is-complete');
   exitFinale();
   renderProgress(0, EGGS.length);
@@ -366,8 +458,22 @@ function toast(text) {
 // UI 绑定
 // ────────────────────────────────────────────────────────────
 
+/** 「下一处彩蛋」：6 个彩蛋之间循环轮转，每次点跳到下一个（到 6 号后回到 1 号） */
+function nextEgg() {
+  const egg = EGGS[nextCursor % EGGS.length];
+  nextCursor = (nextCursor + 1) % EGGS.length;
+  scroll.centerOn(egg.x);
+  eggs.nodes.get(egg.id)?.focus({ preventScroll: true });
+}
+
 function wireUI() {
   document.addEventListener('click', (ev) => {
+    // 点面板外关闭对话（点 NPC 徽章本身不算，那是"打开"）
+    if (!refs.npcPanel.hidden && refs.npcPanel.classList.contains('is-in')) {
+      const t = ev.target instanceof Element ? ev.target : null;
+      if (t && !t.closest('#npc-panel') && !t.closest('.npc')) closeNpc();
+    }
+
     const btn = ev.target instanceof Element ? ev.target.closest('[data-act]') : null;
     if (!btn) return;
     const act = btn.getAttribute('data-act');
@@ -382,20 +488,40 @@ function wireUI() {
         syncBgm();
       }
     }
-    if (act === 'next') {
-      if (!eggs.focusFirstUnfound(scroll)) toast('六座天宫都亮了');
-    }
+    if (act === 'next') nextEgg();
     if (act === 'reset') resetProgress();
     if (act === 'debug') {
       ensureDebug();
       debug.toggle();
     }
     if (act === 'card-close') refs.card.classList.remove('is-in');
+    if (act === 'npc-close') closeNpc();
     if (act === 'finale-close') exitFinale();
     if (act === 'finale-reset') {
       exitFinale();
       resetProgress();
     }
+  });
+
+  // NPC 徽章点击 → 打开对话
+  refs.npcsLayer.addEventListener('click', (ev) => {
+    const btn = ev.target instanceof Element ? ev.target.closest('.npc') : null;
+    if (!btn) return;
+    const egg = EGGS.find((e) => e.id === btn.dataset.id);
+    if (egg) openNpc(egg);
+  });
+
+  // 对话面板里的问题按钮 → 显示答案
+  refs.npcQuestions.addEventListener('click', (ev) => {
+    const btn = ev.target instanceof Element ? ev.target.closest('.npc-panel__q') : null;
+    if (!btn || !currentNpc) return;
+    const i = Number(btn.dataset.q);
+    const qa = currentNpc.questions[i];
+    if (!qa) return;
+    refs.npcAnswer.textContent = qa.a;
+    refs.npcAnswer.hidden = false;
+    refs.npcQuestions.querySelectorAll('.npc-panel__q').forEach((b) =>
+      b.classList.toggle('is-on', b === btn));
   });
 
   window.addEventListener('keydown', (ev) => {

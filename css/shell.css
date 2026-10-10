@@ -431,20 +431,254 @@ body.is-ready .scroll__track {
   margin: 2px 0 8px;
 }
 
-.card__hint {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-}
-
 .card__building {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  margin-top: 4px;
+  font-family: var(--font-kai);
+  font-size: 1.02rem;
+  letter-spacing: 0.06em;
+  color: var(--gold-2);
+  margin: 0 0 8px;
 }
 
-.card__building strong {
+.card__desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.75;
+  margin: 0 0 10px;
+}
+
+/* 画卷题诗：竖排四句，一列一列缓缓浮现，几秒后淡出 */
+.poem-float {
+  position: fixed;
+  left: calc(var(--hud-pad) + env(safe-area-inset-left, 0px));
+  top: calc(var(--hud-pad) + 56px + env(safe-area-inset-top, 0px));
+  z-index: 58; /* 盖在画卷之上、信息卡(60)之下 */
+  pointer-events: none;
+  display: flex;
+  flex-direction: row;
+  gap: 0.85em; /* 列与列间距统一由 gap 控制，四列完全等距 */
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+.poem-float.is-out {
+  opacity: 0;
+}
+
+.poem-float span {
+  display: block;
+  writing-mode: vertical-rl; /* 每列内部从上到下竖排 */
+  font-family: var(--font-kai);
+  font-size: clamp(1.7rem, 4.8vw, 2.4rem);
+  letter-spacing: 0.18em;
+  line-height: 1;
   color: var(--gold-2);
-  font-weight: 600;
+  text-shadow: 0 0 24px rgba(242, 211, 140, 0.7), 0 2px 10px rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  animation: poem-in 1.05s ease forwards;
+}
+
+@keyframes poem-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* ── NPC 徽章 + 对话面板 ─────────────────────────────────── */
+
+.npcs {
+  position: absolute;
+  inset: 0;
+  z-index: 4; /* 在彩蛋(3)之上，可点 */
+  pointer-events: none;
+}
+
+.npc {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  opacity: 0;
+  animation: npc-in 0.6s ease forwards;
+}
+
+.npc__emoji {
+  font-size: 1.5rem;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--glass-2);
+  border: 1px solid var(--glass-line-2);
+  box-shadow: 0 0 16px rgba(242, 211, 140, 0.45);
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.npc:hover .npc__emoji,
+.npc:focus-visible .npc__emoji {
+  box-shadow: 0 0 26px rgba(242, 211, 140, 0.85), 0 0 10px #fff;
+  transform: scale(1.06);
+}
+
+.npc__name {
+  font-family: var(--font-kai);
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  color: var(--gold-2);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.npc:focus-visible {
+  outline: 2px solid var(--jade);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+@keyframes npc-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 8px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.npc-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.98);
+  z-index: 65; /* 在信息卡(60)之上、结局(70)之下 */
+  width: min(380px, 86vw);
+  max-height: min(80dvh, 560px);
+  overflow: auto;
+  padding: 18px 20px 20px;
+  border-radius: var(--r-lg);
+  background: var(--glass-2);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  transition: opacity 0.35s, transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.npc-panel.is-in {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.npc-panel__x {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  background: none;
+  color: var(--text-dim-2);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px;
+}
+
+.npc-panel__x:hover {
+  color: var(--text);
+}
+
+.npc-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.npc-panel__emoji {
+  font-size: 2.2rem;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(242, 211, 140, 0.12);
+  border: 1px solid var(--glass-line-2);
+  flex: none;
+}
+
+.npc-panel__name {
+  font-family: var(--font-kai);
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+}
+
+.npc-panel__role {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.npc-panel__hello {
+  font-family: var(--font-kai);
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 4px 0 14px;
+  padding-left: 10px;
+  border-left: 2px solid var(--glass-line-2);
+}
+
+.npc-panel__questions {
+  display: grid;
+  gap: 8px;
+}
+
+.npc-panel__q {
+  text-align: left;
+  border: 1px solid var(--glass-line);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.86rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+
+.npc-panel__q:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--glass-line-2);
+}
+
+.npc-panel__q.is-on {
+  border-color: var(--glass-line-2);
+  background: rgba(242, 211, 140, 0.12);
+  color: var(--gold-2);
+}
+
+.npc-panel__answer {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(127, 209, 193, 0.07);
+  border: 1px solid rgba(127, 209, 193, 0.2);
+  font-size: 0.86rem;
+  line-height: 1.7;
+  color: var(--text);
 }
 
 .card__tags {
