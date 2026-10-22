@@ -314,14 +314,6 @@ body.is-ready .scroll__track {
   gap: 8px;
 }
 
-.stage-note {
-  font-size: 0.74rem;
-  color: var(--text-dim-2);
-  max-width: 34ch;
-  text-align: right;
-  font-family: var(--font-mono);
-}
-
 .hud__keys {
   font-size: 0.72rem;
   color: var(--text-dim-2);
@@ -1137,10 +1129,6 @@ body.is-complete .progress__fill {
 
   .hud__actions {
     justify-content: flex-start;
-  }
-
-  .stage-note {
-    display: none;
   }
 
   /* 移动端没有键盘，调试面板走 ?debug=1 即可，藏掉这个按钮给正式界面腾地方 */

@@ -14,7 +14,7 @@
 /** 版本号：调试面板会显示，方便对账 */
 export const BUILD = {
   stage: 'Day3',
-  name: '贵州人间长卷 · 点亮天宫',
+  name: '六境·天宫',
   version: '0.2.1',
 };
 
@@ -288,7 +288,7 @@ export const BGM = {
 
 /** 文案 */
 export const COPY = {
-  title: '贵州人间长卷',
+  title: '六境·天宫',
   subtitle: '点中画里的彩蛋，天宫就从壁画里长出来',
   loading: '正在铺开长卷…',
   hintEgg: '点一下试试',

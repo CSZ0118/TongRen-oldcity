@@ -48,7 +48,6 @@ const refs = {
   finaleLine: $('[data-finale-line]'),
   debug: $('#debug'),
   toast: $('#toast'),
-  stageNote: $('[data-stage-note]'),
 };
 
 /** @type {LongScroll} */ let scroll;
@@ -78,7 +77,7 @@ let nextCursor = 0;
 // ────────────────────────────────────────────────────────────
 
 async function boot() {
-  document.title = `${COPY.title} · ${BUILD.name}`;
+  document.title = BUILD.name;
   $('[data-copy-title]').textContent = COPY.title;
   $('[data-copy-subtitle]').textContent = COPY.subtitle;
   $('[data-copy-reset]').textContent = COPY.reset;
@@ -118,9 +117,6 @@ async function boot() {
   // 3) 纯 2D 特效舞台（失败就降级，不能连累整个页面）
   stage = new Stage2D(refs.buildingsLayer, refs.stageCanvas, {
     onStatus: ({ ok, message, detail }) => {
-      refs.stageNote.textContent = message;
-      refs.stageNote.dataset.tone = ok ? 'ok' : 'warn';
-      refs.stageNote.title = detail || '';
       if (!ok) console.warn('[stage2d]', message, detail || '');
     },
   });
